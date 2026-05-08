@@ -30,6 +30,36 @@ npm run build
 
 Web Bluetooth と位置情報取得は、HTTPS または `localhost` でのみ利用できます。スマートフォンから確認する場合は、端末から到達できる HTTPS 環境で配信してください。
 
+### Cloudflare Workers での配信
+
+このアプリは Cloudflare Workers の Static Assets 機能で配信できます。SPA として動作するため、`wrangler.jsonc` では `assets.not_found_handling` を `single-page-application` に設定しています。
+
+Cloudflare へログイン:
+
+```sh
+npx wrangler login
+```
+
+本番デプロイ:
+
+```sh
+npm run deploy
+```
+
+Workers 環境でのローカル確認:
+
+```sh
+npm run cf:dev
+```
+
+補足:
+
+- 日常の画面開発は `npm run dev` を使ってください。こちらは Vite の HMR が有効です。
+- `npm run cf:dev` は一度 `dist/` をビルドしてから Workers の配信挙動を確認するためのコマンドです。
+- `npm run deploy` は `npm run build` のあとに `wrangler deploy` を実行します。
+- Worker 名は `wrangler.jsonc` の `name` で管理しています。必要なら変更してください。
+- `workers.dev` サブドメインでも HTTPS になるため、Web Bluetooth と位置情報取得の要件を満たせます。
+
 ### Android Chrome での注意
 
 - Web Bluetooth に対応した Android Chrome を使用します。
