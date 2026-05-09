@@ -182,6 +182,18 @@ h2 {
   align-items: start;
 }
 
+.map-column {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.map-inline-status {
+  display: flex;
+  justify-content: flex-start;
+  min-height: 36px;
+}
+
 .side-stack {
   display: grid;
   gap: 14px;

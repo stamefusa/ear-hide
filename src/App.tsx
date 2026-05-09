@@ -313,12 +313,6 @@ function App() {
       <main className="main-layout">
         <section className="top-strip" aria-label="モード">
           <ModeSelector value={mode} onChange={updateMode} />
-          {isLocating && (
-            <div className="inline-status">
-              <Activity size={16} aria-hidden />
-              <span>位置取得中</span>
-            </div>
-          )}
           {settingError && (
             <div className="inline-status danger">
               <AlertTriangle size={16} aria-hidden />
@@ -328,19 +322,29 @@ function App() {
         </section>
 
         <div className="workspace-grid">
-          <MapView
-            centerPoint={centerPoint}
-            currentPosition={position}
-            thresholdDistanceM={safeSettings.thresholdDistanceM}
-            visible={mode !== 'motor-test'}
-            onCenterPointChange={(coordinates) => {
-              setCenterPoint(coordinates);
-              setRuntimeError(null);
-              autoRetractLockRef.current = false;
-            }}
-            onUseCurrentLocation={handleUseCurrentLocation}
-            canUseCurrentLocation={Boolean(position)}
-          />
+          <div className="map-column">
+            <MapView
+              centerPoint={centerPoint}
+              currentPosition={position}
+              thresholdDistanceM={safeSettings.thresholdDistanceM}
+              visible={mode !== 'motor-test'}
+              onCenterPointChange={(coordinates) => {
+                setCenterPoint(coordinates);
+                setRuntimeError(null);
+                autoRetractLockRef.current = false;
+              }}
+              onUseCurrentLocation={handleUseCurrentLocation}
+              canUseCurrentLocation={Boolean(position)}
+            />
+            {isLocating && mode !== 'motor-test' && (
+              <div className="map-inline-status">
+                <div className="inline-status">
+                  <Activity size={16} aria-hidden />
+                  <span>位置取得中</span>
+                </div>
+              </div>
+            )}
+          </div>
           <aside className="side-stack">
             <StatusPanel
               items={statusItems}
