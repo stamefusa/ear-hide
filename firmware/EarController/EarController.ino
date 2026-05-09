@@ -11,8 +11,8 @@ constexpr uint8_t PIN_AIN1 = 19;
 constexpr uint8_t PIN_AIN2 = 33;
 constexpr uint8_t PIN_STBY = 22;
 
-constexpr uint16_t MAX_DRIVE_DURATION_MS = 3000;
-constexpr uint8_t DEFAULT_PWM = 180;
+constexpr uint16_t MAX_DRIVE_DURATION_MS = 10000;
+constexpr uint8_t DEFAULT_PWM = 255;
 
 constexpr uint8_t PWM_CHANNEL_AIN1 = 0;
 constexpr uint8_t PWM_CHANNEL_AIN2 = 1;
@@ -26,6 +26,7 @@ void stopMotor();
 void retract(uint16_t durationMs);
 void releaseTape(uint16_t durationMs);
 void handleCommand(String command);
+bool configureMotorPwm();
 
 uint16_t clampDuration(uint32_t durationMs) {
   if (durationMs == 0) {
@@ -62,8 +63,27 @@ bool parseDuration(const String &value, uint16_t &durationMs) {
 
 void writeMotorPins(uint8_t ain1Pwm, uint8_t ain2Pwm, bool standbyEnabled) {
   digitalWrite(PIN_STBY, standbyEnabled ? HIGH : LOW);
+
+#if defined(ESP_ARDUINO_VERSION_MAJOR) && ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcWrite(PIN_AIN1, ain1Pwm);
+  ledcWrite(PIN_AIN2, ain2Pwm);
+#else
   ledcWrite(PWM_CHANNEL_AIN1, ain1Pwm);
   ledcWrite(PWM_CHANNEL_AIN2, ain2Pwm);
+#endif
+}
+
+bool configureMotorPwm() {
+#if defined(ESP_ARDUINO_VERSION_MAJOR) && ESP_ARDUINO_VERSION_MAJOR >= 3
+  return ledcAttach(PIN_AIN1, PWM_FREQUENCY_HZ, PWM_RESOLUTION_BITS) &&
+         ledcAttach(PIN_AIN2, PWM_FREQUENCY_HZ, PWM_RESOLUTION_BITS);
+#else
+  ledcSetup(PWM_CHANNEL_AIN1, PWM_FREQUENCY_HZ, PWM_RESOLUTION_BITS);
+  ledcSetup(PWM_CHANNEL_AIN2, PWM_FREQUENCY_HZ, PWM_RESOLUTION_BITS);
+  ledcAttachPin(PIN_AIN1, PWM_CHANNEL_AIN1);
+  ledcAttachPin(PIN_AIN2, PWM_CHANNEL_AIN2);
+  return true;
+#endif
 }
 
 void stopMotor() {
@@ -153,11 +173,7 @@ class CommandCallbacks : public BLECharacteristicCallbacks {
 
 void setup() {
   pinMode(PIN_STBY, OUTPUT);
-
-  ledcSetup(PWM_CHANNEL_AIN1, PWM_FREQUENCY_HZ, PWM_RESOLUTION_BITS);
-  ledcSetup(PWM_CHANNEL_AIN2, PWM_FREQUENCY_HZ, PWM_RESOLUTION_BITS);
-  ledcAttachPin(PIN_AIN1, PWM_CHANNEL_AIN1);
-  ledcAttachPin(PIN_AIN2, PWM_CHANNEL_AIN2);
+  configureMotorPwm();
 
   stopMotor();
 
